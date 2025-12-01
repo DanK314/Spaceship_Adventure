@@ -357,7 +357,7 @@ class Game {
 
 		try {
 			// ⚠️ YOUR_RENDER_URL은 실제 주소로 바꿔야 합니다!
-			const response = await fetch('YOUR_RENDER_URL/submit', {
+			const response = await fetch('https://spaceship-adventure-server.onrender.com/submit', {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',
