@@ -1,0 +1,114 @@
+/* ======== 1. 기본 페이지 스타일 ======== */
+body,
+html {
+	margin: 0;
+	padding: 0;
+	font-family: Arial, sans-serif;
+	background-color: #f0f0f0;
+	/* 페이지 배경색 (회색) */
+
+	/* body를 flex 컨테이너로 만들어 자식 요소를 중앙 정렬 */
+	display: flex;
+	justify-content: center;
+	/* 가로 중앙 */
+	align-items: center;
+	/* 세로 중앙 */
+	min-height: 100vh;
+	/* body 높이를 화면 전체 높이로 */
+}
+
+/* ======== 2. 게임 전체 컨테이너 ======== */
+/* 이 요소가 캔버스와 모든 UI 요소를 감싸는 기준점이 됩니다. */
+#gameObjects {
+	/* position: relative가 있어야 
+       자식 요소(score, gameOver 등)의 
+       position: absolute 기준점이 됩니다. */
+	position: relative;
+
+	/* HTML의 canvas 크기와 동일하게 지정 */
+	width: 500px;
+	height: 300px;
+}
+
+/* ======== 3. 캔버스 스타일 ======== */
+canvas#gameCanvas {
+	/* 컨테이너(#gameObjects)를 꽉 채움 */
+	width: 100%;
+	height: 100%;
+	display: block;
+	/* 캔버스 아래 생기는 미세한 여백 제거 */
+	border: 1px solid black;
+	background-color: #FFFFFF;
+	/* 캔버스 배경색 (흰색) */
+}
+
+/* ======== 4. UI 오버레이 스타일 ======== */
+
+/* 점수판 (왼쪽 상단) */
+#score {
+	position: absolute;
+	top: -30px;
+	left: 10px;
+	z-index: 10;
+	/* 캔버스(z-index: 0)보다 위에 표시 */
+
+	font-size: 20px;
+	font-weight: bold;
+	color: #333;
+}
+
+/* 최고 점수 (오른쪽 상단) */
+#highScore {
+	position: absolute;
+	top: -30px;
+	right: 10px;
+	z-index: 10;
+
+	font-size: 20px;
+	font-weight: bold;
+	color: #333;
+}
+
+/* 'Game Over' 창 (정중앙) */
+#gameOver {
+	/* 1. 부모(#gameObjects) 기준으로 위치 지정 */
+	position: absolute;
+
+	/* 2. 부모의 50%, 50% 위치로 이동 */
+	top: 50%;
+	left: 50%;
+
+	/* 3. 자기 자신 크기의 -50%, -50% 만큼 이동하여 중앙 맞춤 */
+	transform: translate(-50%, -50%);
+
+	z-index: 20;
+	/* 다른 UI보다 위에 표시 */
+
+	/* 디자인 */
+	background-color: rgba(255, 255, 255, 0.85);
+	/* 반투명 흰색 */
+	padding: 25px;
+	border-radius: 10px;
+	border: 2px solid #555;
+	text-align: center;
+	font-size: 32px;
+	font-weight: bold;
+	color: red;
+
+	/* 4. 평소에는 숨겨 둠 (JS에서 보이게 처리) */
+	display: none;
+}
+
+/* 재시작 버튼 */
+#restartBtn {
+	font-size: 18px;
+	padding: 10px 20px;
+	margin-top: 15px;
+	cursor: pointer;
+	border: 1px solid #555;
+	border-radius: 5px;
+}
+
+#restartBtn:hover {
+	background-color: #ddd;
+}
