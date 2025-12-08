@@ -53,17 +53,78 @@ class Obstacle {
 	}
 
 	getRect() {
-		return { x: this.x, y: this.y, w: this.w, h: this.h };
+		const padding = 5; // 충돌 판정 패딩
+		return {
+			x: this.x + padding,
+			y: this.y + padding,
+			w: this.w - padding * 2,
+			h: this.h - padding * 2
+		};
 	}
 }
+// [수정됨] 앞으로 움직일 경로(예측선)를 미리 보여주는 운석
+class CurvedObstacle extends Obstacle {
+	constructor(x, y, w, h, speed) {
+		super(x, y, w, h, speed);
+		this.color = '#FF8800'; // 주황색
+		this.centerY = y;
+		this.angle = 0;
+		this.angleSpeed = Math.random() < 0.5 ? 0.05 : -0.05 // 각도 변화 속도
 
+		// 예측 경로를 얼마나 길게 보여줄지 (점의 개수)
+		this.predictionSteps = 60;
+		// 점들 사이의 간격 (값이 클수록 점이 듬성듬성 찍힘)
+		this.stepGap = 1;
+	}
+
+	update() {
+		this.x -= this.speed;
+
+		// 위아래로 흔들리는 로직
+		this.angle += this.angleSpeed;
+		this.y = this.centerY + Math.sin(this.angle) * 100;
+	}
+
+	draw(ctx) {
+		// 1. 예측 경로 그리기 (미래의 위치를 미리 계산)
+		ctx.save();
+		ctx.fillStyle = "#FFFFFF"; // 예측선은 흰색 점으로
+
+		// 현재 위치부터 미래 위치들을 계산해서 점을 찍음
+		for (let i = 1; i <= this.predictionSteps; i++) {
+			// 미래 시점의 변수들 (i * gap 만큼 시간이 흐른 뒤)
+			const futureIndex = i * this.stepGap;
+
+			// X: 현재 속도만큼 왼쪽으로 이동
+			const futureX = this.x - (this.speed * futureIndex);
+
+			// Y: 현재 각도 속도(0.1)만큼 더해서 사인파 계산
+			const futureAngle = this.angle + (this.angleSpeed * futureIndex);
+			const futureY = this.centerY + Math.sin(futureAngle) * 100;
+
+			// 투명도 조절 (멀리 있는 미래일수록 흐릿하게)
+			ctx.globalAlpha = 1 - (i / this.predictionSteps);
+
+			// 작은 점 그리기
+			ctx.beginPath();
+			// 운석의 중심점(this.h/2)에 맞춰서 점을 찍음
+			ctx.arc(futureX + this.w / 2, futureY + this.h / 2, 2, 0, Math.PI * 2);
+			ctx.fill();
+		}
+		ctx.restore();
+
+		// 2. 본체 그리기
+		super.draw(ctx);
+	}
+}
 // ========= 3. Player 클래스 =========
 class Player {
-	constructor(x, y, w, h, gravity, thrust) {
+	constructor(x, y, size, gravity, thrust) {
 		this.x = x;
 		this.y = y;
-		this.w = w; // width
-		this.h = h; // height
+		this.w = size * 1.5; // width
+		this.h = size; // height
+		this.size = size; // 크기 (그리기용)
 		this.g = gravity; // 중력
 		this.thrust = thrust; // 상승력
 		this.startY = y; // 리셋용 초기 Y위치
@@ -89,8 +150,42 @@ class Player {
 	}
 
 	draw(ctx) {
-		ctx.fillStyle = "#AAAAFF";
-		ctx.fillRect(this.x, this.y, this.w, this.h);
+		const x = this.x;
+		const y = this.y;
+		const ex = this.x + 1.5 * this.size;
+		const ey = this.y + this.size;
+		const $ = this.size / 20;
+		ctx.fillStyle = "#1010FF";
+		ctx.fillRect(x + 15 * $, y + 9 * $, 5 * $, 5 * $);
+		ctx.strokeStyle = "#FFFFFF";
+		ctx.lineWidth = 2;
+		ctx.fillStyle = "#CCCCFF";
+		ctx.beginPath();
+		ctx.moveTo(x, ey);
+		ctx.lineTo(x, ey - 10 * $);
+		ctx.lineTo(x + (3 * $), ey - (8 * $));
+		ctx.lineTo(ex - (5 * $), ey - (8 * $));
+		ctx.lineTo(ex, ey - 5 * $);
+		ctx.lineTo(ex - 5 * $, ey - 2 * $);
+		ctx.lineTo(x + (3 * $), ey - 2 * $);
+		ctx.lineTo(x, ey);
+		ctx.stroke();
+		ctx.fill();
+		ctx.fillStyle = "#EEEEFF55";
+		ctx.beginPath();
+		ctx.moveTo(x + 5 * $, y + 12 * $);
+		ctx.lineTo(x + 5 * $, y + 5 * $);
+		ctx.lineTo(x + 10 * $, y);
+		ctx.lineTo(x + 20 * $, y);
+		ctx.lineTo(x + 22.5 * $, y + 5 * $);
+		ctx.lineTo(x + 22.5 * $, y + 12 * $);
+		ctx.lineTo(x + 5 * $, y + 12 * $);
+		ctx.stroke();
+		ctx.fill();
+		ctx.moveTo(x + 15 * $, y + 5 * $);
+		ctx.beginPath();
+		ctx.arc(x + 16 * $, y + 5 * $, 3 * $, Math.PI * 1.5, Math.PI * 2.1);
+		ctx.stroke();
 	}
 
 	reset() {
@@ -116,7 +211,7 @@ class Game {
 		this.gameOverDisplay = document.getElementById("gameOver");
 		this.restartBtn = document.getElementById("restartBtn");
 
-		this.player = new Player(50, this.sh / 2 - 15, 50, 30, 0.2, -0.4);
+		this.player = new Player(50, this.sh / 2 - 15, 30, 0.2, -0.4);
 
 		this.obstacles = [];
 		this.playerParticles = [];
@@ -168,6 +263,7 @@ class Game {
 		this.lastObstacleSpawn = Date.now();
 		this.gameOverDisplay.style.display = 'none';
 		this.updateScoreDisplay();
+		this.obstacleSpeed = 5;
 
 		// 멈췄던 루프를 다시 시작시킵니다.
 		requestAnimationFrame(this.gameLoop);
@@ -204,7 +300,7 @@ class Game {
 			requestAnimationFrame(this.gameLoop);
 		}
 
-		this.score ++;
+		this.score++;
 		this.updateScoreDisplay();
 	}
 
@@ -228,22 +324,23 @@ class Game {
 			if (p.x + p.radius < 0) {
 				p.x = this.sw + p.radius;
 				p.y = Math.random() * this.sh;
+				p.alpha = 1;
 			}
 		});
 	}
 
 	spawnPlayerParticle() {
-		if (this.isBoosting) {
-			const x = this.player.x;
-			const y = this.player.y + this.player.h / 2;
-			const radius = Math.random() * 2 + 1;
-			const color = '#FFD700';
-			const velocity = {
-				x: Math.random() * -1 - 1,
-				y: (Math.random() - 0.5) * 1
-			};
-			this.playerParticles.push(new Particle(x, y, radius, color, velocity));
-		}
+
+		const x = this.player.x;
+		const y = this.player.y + this.player.h / 2 + this.player.h / 4 + (Math.random() - 0.5) * 10;
+		const radius = Math.random() * 2 + 1;
+		const color = '#ffffffff';
+		const velocity = {
+			x: Math.random() * -1 - 1,
+			y: (Math.random() - 0.5) * 1
+		};
+		this.playerParticles.push(new Particle(x, y, radius, color, velocity));
+
 	}
 
 	handlePlayerParticles() {
@@ -265,54 +362,54 @@ class Game {
 		if (now - this.lastObstacleSpawn > this.obstacleSpawnInterval) {
 			this.lastObstacleSpawn = now;
 			const Rand = Math.random();
-			if(Rand < 0.2){
-				const w = 50;
-				const h = w;
-				const x = this.sw;
-				let y;
+			if (Rand < 0.2) {
+				// ... (기존 코드)
+				const w = 50; const h = w; const x = this.sw; let y;
 				for (let index = 0; index < 3; index++) {
 					y = Math.random() * (this.sh - h);
 					this.obstacles.push(new Obstacle(x, y, w, h, this.obstacleSpeed));
 				}
-			}else if(Rand < 0.4){
-				const w = 100;
-				const h = w;
-				const x = this.sw;
-				let y;
+			} else if (Rand < 0.4) {
+				// ... (기존 코드)
+				const w = 100; const h = w; const x = this.sw; let y;
 				for (let index = 0; index < 2; index++) {
 					y = Math.random() * (this.sh - h);
 					this.obstacles.push(new Obstacle(x, y, w, h, this.obstacleSpeed));
 				}
-			}else if(Rand < 0.6){
-				const w = 25;
-				const h = w;
-				const x = this.sw;
-				let y;
+			} else if (Rand < 0.6) {
+				// ... (기존 코드)
+				const w = 25; const h = w; const x = this.sw; let y;
 				for (let index = 0; index < 5; index++) {
 					y = Math.random() * (this.sh - h);
-					this.obstacles.push(new Obstacle(x, y, w, h, this.obstacleSpeed));
+					if(this.score > 500 && Math.random() < 0.3) {
+						this.obstacles.push(new CurvedObstacle(x, y, w, h, this.obstacleSpeed - 1));
+					} else {
+						this.obstacles.push(new Obstacle(x, y, w, h, this.obstacleSpeed));
+					}
+					
 				}
-			}else if(Rand < 0.9){
-				const w = 150;
-				const h = w;
-				const x = this.sw;
-				let y;
+			} else if (Rand < 0.8) {
+				// ... (기존 코드)
+				const w = 150; const h = w; const x = this.sw; let y;
 				for (let index = 0; index < 1; index++) {
 					y = Math.random() * (this.sh - h);
 					this.obstacles.push(new Obstacle(x, y, w, h, this.obstacleSpeed));
 				}
-			}else{
-				const w = 200;
+			} else {
+				// [여기 수정됨] 마지막 10%: 작고 휘어지는 운석
+				const w = 50; // 작게 설정
 				const h = w;
 				const x = this.sw;
-				let y;
-				for (let index = 0; index < 1; index++) {
-					y = Math.random() * (this.sh - h);
-					this.obstacles.push(new Obstacle(x, y, w, h, this.obstacleSpeed));
-				}
+
+				// 화면 위아래로 너무 벗어나지 않게 중앙 부근에서 생성
+				const y = (this.sh / 4) + Math.random() * (this.sh / 2);
+
+				// 일반 Obstacle 대신 CurvedObstacle 생성
+				this.obstacles.push(new CurvedObstacle(x, y, w, h, this.obstacleSpeed + 1));
 			}
 		}
 
+		// 장애물 업데이트 및 제거 로직은 기존과 동일
 		for (let i = this.obstacles.length - 1; i >= 0; i--) {
 			const obs = this.obstacles[i];
 			obs.update();
@@ -383,6 +480,11 @@ class Game {
 
 	updateScoreDisplay() {
 		this.scoreDisplay.textContent = 'Score: ' + this.score;
+		if (this.score % 500 === 0 && this.obstacleSpeed < 10) {
+			this.obstacleSpeed += 0.1;
+			// 생성된 장애물들의 속도도 같이 업데이트 해줘야 자연스러움
+			this.obstacles.forEach(obs => obs.speed = this.obstacleSpeed);
+		}
 	}
 }
 
