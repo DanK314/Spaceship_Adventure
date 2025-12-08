@@ -72,7 +72,7 @@ class CurvedObstacle extends Obstacle {
 		this.angleSpeed = Math.random() < 0.5 ? 0.05 : -0.05 // 각도 변화 속도
 
 		// 예측 경로를 얼마나 길게 보여줄지 (점의 개수)
-		this.predictionSteps = 60;
+		this.predictionSteps = 80;
 		// 점들 사이의 간격 (값이 클수록 점이 듬성듬성 찍힘)
 		this.stepGap = 1;
 	}
