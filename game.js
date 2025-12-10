@@ -70,6 +70,7 @@ class CurvedObstacle extends Obstacle {
 		this.centerY = y;
 		this.angle = 0;
 		this.angleSpeed = Math.random() < 0.5 ? 0.05 : -0.05 // 각도 변화 속도
+        this.ma = (1 - Math.random()) * 100
 
 		// 예측 경로를 얼마나 길게 보여줄지 (점의 개수)
 		this.predictionSteps = 80;
@@ -82,7 +83,7 @@ class CurvedObstacle extends Obstacle {
 
 		// 위아래로 흔들리는 로직
 		this.angle += this.angleSpeed;
-		this.y = this.centerY + Math.sin(this.angle) * 100;
+		this.y = this.centerY + Math.sin(this.angle) * this.ma;
 	}
 
 	draw(ctx) {
@@ -100,7 +101,7 @@ class CurvedObstacle extends Obstacle {
 
 			// Y: 현재 각도 속도(0.1)만큼 더해서 사인파 계산
 			const futureAngle = this.angle + (this.angleSpeed * futureIndex);
-			const futureY = this.centerY + Math.sin(futureAngle) * 100;
+			const futureY = this.centerY + Math.sin(futureAngle) * this.ma;
 
 			// 투명도 조절 (멀리 있는 미래일수록 흐릿하게)
 			ctx.globalAlpha = 1 - (i / this.predictionSteps);
@@ -367,7 +368,11 @@ class Game {
 				const w = 50; const h = w; const x = this.sw; let y;
 				for (let index = 0; index < 3; index++) {
 					y = Math.random() * (this.sh - h);
-					this.obstacles.push(new Obstacle(x, y, w, h, this.obstacleSpeed));
+					if(this.score > 1000 && Math.random() < 0.5) {
+						this.obstacles.push(new CurvedObstacle(x, y, w, h, this.obstacleSpeed - 1));
+					} else {
+						this.obstacles.push(new Obstacle(x, y, w, h, this.obstacleSpeed));
+					}
 				}
 			} else if (Rand < 0.4) {
 				// ... (기존 코드)
@@ -381,7 +386,7 @@ class Game {
 				const w = 25; const h = w; const x = this.sw; let y;
 				for (let index = 0; index < 5; index++) {
 					y = Math.random() * (this.sh - h);
-					if(this.score > 500 && Math.random() < 0.3) {
+					if(this.score > 500 && Math.random() < 0.5) {
 						this.obstacles.push(new CurvedObstacle(x, y, w, h, this.obstacleSpeed - 1));
 					} else {
 						this.obstacles.push(new Obstacle(x, y, w, h, this.obstacleSpeed));
@@ -400,12 +405,12 @@ class Game {
 				const w = 50; // 작게 설정
 				const h = w;
 				const x = this.sw;
-
-				// 화면 위아래로 너무 벗어나지 않게 중앙 부근에서 생성
-				const y = (this.sh / 4) + Math.random() * (this.sh / 2);
+				const y = Math.random() * (this.sh - h);
 
 				// 일반 Obstacle 대신 CurvedObstacle 생성
 				this.obstacles.push(new CurvedObstacle(x, y, w, h, this.obstacleSpeed + 1));
+                this.obstacles.push(new CurvedObstacle(x, y, w, h, this.obstacleSpeed));
+                this.obstacles.push(new CurvedObstacle(x, y, w, h, this.obstacleSpeed - 1));
 			}
 		}
 
