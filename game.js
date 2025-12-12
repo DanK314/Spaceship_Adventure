@@ -49,7 +49,17 @@ class Obstacle {
 
 	draw(ctx) {
 		ctx.fillStyle = this.color;
-		ctx.fillRect(this.x, this.y, this.w, this.h);
+		ctx.beginPath();
+		ctx.moveTo(this.x + this.w / 4, this.y);
+		ctx.lineTo(this.x + (this.w * 3) / 4, this.y);
+		ctx.lineTo(this.x + this.w, this.y + this.h / 4);
+		ctx.lineTo(this.x + this.w, this.y + (this.h * 3) / 4);
+		ctx.lineTo(this.x + (this.w * 3) / 4, this.y + this.h);
+		ctx.lineTo(this.x + this.w / 4, this.y + this.h);
+		ctx.lineTo(this.x, this.y + (this.h * 3) / 4);
+		ctx.lineTo(this.x, this.y + this.h / 4);
+		ctx.closePath();
+		ctx.fill();
 	}
 
 	getRect() {
@@ -363,7 +373,8 @@ class Game {
 		if (now - this.lastObstacleSpawn > this.obstacleSpawnInterval) {
 			this.lastObstacleSpawn = now;
 			const Rand = Math.random();
-			if (Rand < 0.2) {
+			const all = 7;
+			if (Rand < 1 / all) {
 				// ... (기존 코드)
 				const w = 50; const h = w; const x = this.sw; let y;
 				for (let index = 0; index < 3; index++) {
@@ -374,14 +385,14 @@ class Game {
 						this.obstacles.push(new Obstacle(x, y, w, h, this.obstacleSpeed));
 					}
 				}
-			} else if (Rand < 0.4) {
+			} else if (Rand < 2 / all) {
 				// ... (기존 코드)
 				const w = 100; const h = w; const x = this.sw; let y;
 				for (let index = 0; index < 2; index++) {
 					y = Math.random() * (this.sh - h);
 					this.obstacles.push(new Obstacle(x, y, w, h, this.obstacleSpeed));
 				}
-			} else if (Rand < 0.6) {
+			} else if (Rand < 3 / all) {
 				// ... (기존 코드)
 				const w = 25; const h = w; const x = this.sw; let y;
 				for (let index = 0; index < 5; index++) {
@@ -393,14 +404,14 @@ class Game {
 					}
 					
 				}
-			} else if (Rand < 0.8) {
+			} else if (Rand < 4 / all) {
 				// ... (기존 코드)
 				const w = 150; const h = w; const x = this.sw; let y;
 				for (let index = 0; index < 1; index++) {
 					y = Math.random() * (this.sh - h);
 					this.obstacles.push(new Obstacle(x, y, w, h, this.obstacleSpeed));
 				}
-			} else {
+			} else if(Rand < 5 / all) {
 				// [여기 수정됨] 마지막 10%: 작고 휘어지는 운석
 				const w = 50; // 작게 설정
 				const h = w;
@@ -408,9 +419,30 @@ class Game {
 				const y = Math.random() * (this.sh - h);
 
 				// 일반 Obstacle 대신 CurvedObstacle 생성
-				this.obstacles.push(new CurvedObstacle(x, y, w, h, this.obstacleSpeed + 1));
+				this.obstacles.push(new CurvedObstacle(x + 50, y, w, h, this.obstacleSpeed));
+                this.obstacles.push(new CurvedObstacle(x + 25, y, w, h, this.obstacleSpeed));
                 this.obstacles.push(new CurvedObstacle(x, y, w, h, this.obstacleSpeed));
-                this.obstacles.push(new CurvedObstacle(x, y, w, h, this.obstacleSpeed - 1));
+			} else if(Rand < 6 / all) {
+				const w = 25;
+				const h = w;
+				const x = this.sw;
+				let y;
+				y = Math.random() * (this.sh - h);
+				for (let index = 0; index < 10; index++) {
+					if(index % 2 === 0){
+						this.obstacles.push(new Obstacle(x + index * 25, y ,  w, h, this.obstacleSpeed));
+					} else {
+						this.obstacles.push(new CurvedObstacle(x + index * 25, y ,  w, h, this.obstacleSpeed));
+					}
+				}
+			} else if(Rand < 7 / all) {
+				const w = 100;
+				const h = w;
+				const x = this.sw;
+				const y = Math.random() * (this.sh - h);
+				const gap = 75;
+				this.obstacles.push(new Obstacle(x, 0 ,  w, y, this.obstacleSpeed));
+				this.obstacles.push(new Obstacle(x, y + gap ,  w, this.sh - y - gap, this.obstacleSpeed));
 			}
 		}
 
