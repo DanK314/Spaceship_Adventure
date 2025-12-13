@@ -63,7 +63,7 @@ class Obstacle {
 	}
 
 	getRect() {
-		const padding = 5; // 충돌 판정 패딩
+		const padding = this.w / 8; // 충돌 판정 패딩
 		return {
 			x: this.x + padding,
 			y: this.y + padding,
